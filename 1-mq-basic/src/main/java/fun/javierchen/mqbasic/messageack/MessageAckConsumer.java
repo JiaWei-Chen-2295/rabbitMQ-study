@@ -7,6 +7,8 @@ import com.rabbitmq.client.DeliverCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+
 public class MessageAckConsumer {
     private final static String QUEUE_NAME = "ack-test-1";
     private final static Logger logger = LoggerFactory.getLogger(MessageAckConsumer.class);
@@ -26,7 +28,7 @@ public class MessageAckConsumer {
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), "UTF-8");
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             try {
                 handelMessage(message);
                 // 如果消息处理完毕 确认消息
@@ -38,6 +40,8 @@ public class MessageAckConsumer {
                 // 建议 requeue 为 true 时增加重试次数
                 channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, false);
                 logger.error(" [ScannerProvider] error message: {}", e.getMessage());
+                // 仅支持拒绝单条消息
+                // channel.basicReject(delivery.getEnvelope().getDeliveryTag(), false);
             }
         };
 
